@@ -1,1 +1,17 @@
+'https://stackoverflow.com/questions/45187903/how-to-run-sap-gui-script-from-excel-macro
 
+Sub Connect_To_SAP()
+
+    Dim SapGuiAuto As Object
+    Dim SAPApp As Object
+    Dim SAPCon As Object
+    Dim session As Object
+
+    Set SapGuiAuto = GetObject("SAPGUI")
+    Set SAPApp = SapGuiAuto.GetScriptingEngine
+    Set SAPCon = SAPApp.Children(0)
+    Set session = SAPCon.Children.ElementAt(0) ' <--- Assumes you are using the first session open. '
+
+'Your script here
+
+End Sub
