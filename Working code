@@ -1,0 +1,139 @@
+Option Explicit
+Public SapGuiAuto, WScript, msgcol
+Public objGui  As GuiApplication
+Public objConn As GuiConnection
+Public session As GuiSession
+Sub createPR()
+    Dim WshShell As Object
+    
+    'This attempts to start SAP GUI
+    'Shell "C:\Program Files (x86)\SAP\FrontEnd\SAPgui\saplogon.exe", 4 'Enter your path to saplogon
+    'Set WshShell = CreateObject("WScript.Shell")
+    '
+    'Do Until WshShell.AppActivate("SAP Logon ")
+    '    Application.Wait Now + TimeValue("0:00:01")
+    'Loop
+    
+    'This requires SAP GUI to be running
+    Set WshShell = Nothing
+    Set SapGuiAuto = GetObject("SAPGUI")
+    Set objGui = SapGuiAuto.GetScriptingEngine
+    Set objConn = objGui.Children(0)
+    Set session = objConn.Children(0)
+    '
+    session.StartTransaction "ME51N"
+    '
+    Dim objExcel
+    Dim objSheet, intRow, i, n
+    Dim VENDORNAME, VENDOR, VENDORCONTRACT, SHORTTEXT, WORKORDER, VALUATION, FOLDER, FILENAME, PRSBAR, PREQ, APPROVER, REVIEWER
+    Set objExcel = GetObject(, "Excel.Application")
+    Set objSheet = objExcel.ActiveWorkbook.ActiveSheet
+    
+    For i = 4 To objSheet.UsedRange.Rows.Count
+         If IsEmpty(Cells(i, "I")) Then
+             VENDORNAME = Trim(CStr(objSheet.Cells(i, 3).Value))
+             VENDOR = Trim(CStr(objSheet.Cells(i, 4).Value))
+             VENDORCONTRACT = Trim(CStr(objSheet.Cells(i, 2).Value))
+             SHORTTEXT = Trim(CStr(objSheet.Cells(i, 5).Value))
+             WORKORDER = Trim(CStr(objSheet.Cells(i, 6).Value))
+             VALUATION = Trim(CStr(objSheet.Cells(i, 8).Value))
+             FOLDER = Trim(CStr(objSheet.Cells(i, 14).Value))
+             FILENAME = Trim(CStr(objSheet.Cells(i, 16).Value))
+             Cells(i + 10, 9) = "Please apply to OA:" + vbCr + VENDORNAME + vbCr + VENDORCONTRACT
+             Cells(i + 11, 9) = VENDOR
+             Cells(i + 12, 9) = FOLDER
+             Cells(i + 13, 9) = FILENAME
+             Cells(i + 14, 9) = PREQ
+        
+         
+            'Enter purchace organization
+            session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0013/subSUB2:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:3212/cntlGRIDCONTROL/shellcont/shell").modifyCell 0, "EKORG", "1200"
+            'Enter short text
+            session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0013/subSUB2:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:3212/cntlGRIDCONTROL/shellcont/shell").modifyCell 0, "TXZ01", SHORTTEXT
+             'Enter Unit of Measure
+            session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0013/subSUB2:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:3212/cntlGRIDCONTROL/shellcont/shell").modifyCell 0, "MEINS", "lot"
+            'Enter Quantity
+            session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0013/subSUB2:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:3212/cntlGRIDCONTROL/shellcont/shell").modifyCell 0, "MENGE", "1"
+            session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0013/subSUB2:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:3212/cntlGRIDCONTROL/shellcont/shell").currentCellColumn = "MENGE"
+            'Press enter to confirm entries so far
+            session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0013/subSUB2:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:3212/cntlGRIDCONTROL/shellcont/shell").pressEnter
+            'On first run of ME51N, a pop-up opens confirming who the requisitioner is, either press enter or click OK to confirm
+            session.FindById("wnd[1]/usr/btnBUTTON_1").press
+            'Enter GL account
+            session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0020/subSUB3:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:1301/subSUB2:SAPLMEGUI:3303/tabsREQ_ITEM_DETAIL/tabpTABREQDT6/ssubTABSTRIPCONTROL1SUB:SAPLMEVIEWS:1101/subSUB2:SAPLMEACCTVI:0100/subSUB1:SAPLMEACCTVI:1100/ctxtMEACCT1100-SAKTO").Text = "690051"
+            'Enter Work Order
+            session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0020/subSUB3:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:1301/subSUB2:SAPLMEGUI:3303/tabsREQ_ITEM_DETAIL/tabpTABREQDT6/ssubTABSTRIPCONTROL1SUB:SAPLMEVIEWS:1101/subSUB2:SAPLMEACCTVI:0100/subSUB1:SAPLMEACCTVI:1100/subKONTBLOCK:SAPLKACB:1101/ctxtCOBL-AUFNR").Text = WORKORDER
+            'Press Enter
+            session.FindById("wnd[0]").sendVKey 0
+            'Enter Valuation
+             session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0010/subSUB3:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:1301/subSUB2:SAPLMEGUI:3303/tabsREQ_ITEM_DETAIL/tabpTABREQDT5/ssubTABSTRIPCONTROL1SUB:SAPLMEGUI:3320/txtMEREQ3320-PREIS").Text = VALUATION
+            'Press Enter
+            session.FindById("wnd[0]").sendVKey 0
+            'Application.Wait (Now + TimeValue("0:00:03"))
+            
+            'THIS IF STATMENT IS NOT WORKING. IF THE AGREEMENT COLUMN (D) IS BLANK I NEED THE LOCAL PO PROCESS. IF THERE IS AN AGREEMENT NUMBER I NEED TEXT ENTERED "Please apply to OA: (next line) VENDORNAME (next line) VENDOR (Next Line) VENDORCONTRACT
+            If IsEmpty(Cells(i, 4)) Then 'Create Local PO
+                'Click Local PO ticky box
+                session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0010/subSUB3:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:1301/subSUB2:SAPLMEGUI:3303/tabsREQ_ITEM_DETAIL/tabpTABREQDT15/ssubTABSTRIPCONTROL1SUB:SAPLMEGUI:1318/ssubCUSTOMER_DATA_ITEM:SAPLXM02:0111/chkCI_EBANDB-ZZLOCLPO").Selected = True
+                'Enter Region Code
+                session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0010/subSUB3:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:1301/subSUB2:SAPLMEGUI:3303/tabsREQ_ITEM_DETAIL/tabpTABREQDT15/ssubTABSTRIPCONTROL1SUB:SAPLMEGUI:1318/ssubCUSTOMER_DATA_ITEM:SAPLXM02:0111/ctxtCI_EBANDB-ZZREGIO").Text = "10"
+                'Enter Vendor Number
+                session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0010/subSUB3:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:1301/subSUB2:SAPLMEGUI:3303/tabsREQ_ITEM_DETAIL/tabpTABREQDT15/ssubTABSTRIPCONTROL1SUB:SAPLMEGUI:1318/ssubCUSTOMER_DATA_ITEM:SAPLXM02:0111/ctxtCI_EBANDB-ZZ_LIFNR").Text = VENDOR
+                'Press Enter
+                session.FindById("wnd[0]").sendVKey 0
+            Else 'enter text to get buyer to use OA contract
+                session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0020/subSUB3:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:1301/subSUB2:SAPLMEGUI:3303/tabsREQ_ITEM_DETAIL/tabpTABREQDT13").Select
+                session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0010/subSUB3:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:1301/subSUB2:SAPLMEGUI:3303/tabsREQ_ITEM_DETAIL/tabpTABREQDT13/ssubTABSTRIPCONTROL1SUB:SAPLMEGUI:1329/subTEXTS:SAPLMMTE:0200/subEDITOR:SAPLMMTE:0201/cntlTEXT_EDITOR_0201/shellcont/shell").Text = "Please apply to OA:" + vbCr + VENDORNAME + vbCr + VENDOR + vbCr + VENDORCONTRACT
+                session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0010/subSUB3:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:1301/subSUB2:SAPLMEGUI:3303/tabsREQ_ITEM_DETAIL/tabpTABREQDT13/ssubTABSTRIPCONTROL1SUB:SAPLMEGUI:1329/subTEXTS:SAPLMMTE:0200/subEDITOR:SAPLMMTE:0201/cntlTEXT_EDITOR_0201/shellcont/shell").SetSelectionIndexes 14, 14
+            End If
+            'Click Toolbox dropdown to create attachment
+            session.FindById("wnd[0]/titl/shellcont/shell").pressContextButton "%GOS_TOOLBOX"
+            'Click Create Attachment
+            session.FindById("wnd[0]/titl/shellcont/shell").selectContextMenuItem "%GOS_PCATTA_CREA"
+            session.FindById("wnd[1]").sendVKey 4
+            session.FindById("wnd[2]").Close
+            'While recording a macro the typical windows file picker dialogue box doesnt come up. Its just a window with text boxes for folder path and filename.
+            session.FindById("wnd[1]/usr/ctxtDY_PATH").Text = FOLDER
+            session.FindById("wnd[1]/usr/ctxtDY_FILENAME").Text = FILENAME & ".pdf"
+            'Click OK for invoice upload
+            session.FindById("wnd[1]/tbar[0]/btn[0]").press
+            'Click Save to complete PReq creation.
+            session.FindById("wnd[0]/tbar[0]/btn[11]").press
+            
+            'For getting the value back to excel, run the below command and assign the value got from the above creation process.
+            PRSBAR = session.FindById("wnd[0]/sbar").Text
+            Dim StringLength As Integer
+            StringLength = Len(PRSBAR)
+            For n = 1 To StringLength
+            If IsNumeric(Mid(PRSBAR, n, 1)) Then PREQ = PREQ & Mid(PRSBAR, n, 1)
+            Next n
+            Cells(i, 9) = PREQ
+        End If
+    Next
+    session.EndTransaction
+    For i = 4 To objSheet.UsedRange.Rows.Count
+        If IsEmpty(Cells(i, "J")) Then
+            REVIEWER = Trim(CStr(objSheet.Cells(1, 15).Value))
+            APPROVER = Trim(CStr(objSheet.Cells(i, 15).Value))
+            'open business workplace
+            session.FindById("wnd[0]/tbar[1]/btn[36]").press
+            'expand inbox
+            session.FindById("wnd[0]/usr/cntlSINWP_CONTAINER/shellcont/shell/shellcont[0]/shell").expandNode "          2"
+            'select workflow
+            session.FindById("wnd[0]/usr/cntlSINWP_CONTAINER/shellcont/shell/shellcont[0]/shell").selectedNode = "          5"
+            'select top item in workflow - approval
+            session.FindById("wnd[0]/usr/cntlSINWP_CONTAINER/shellcont/shell/shellcont[0]/shell").topNode = "          1"
+            session.FindById("wnd[0]/usr/cntlSINWP_CONTAINER/shellcont/shell/shellcont[1]/shell/shellcont[0]/shell").currentCellColumn = "WI_TEXT"
+            session.FindById("wnd[0]/usr/cntlSINWP_CONTAINER/shellcont/shell/shellcont[1]/shell/shellcont[0]/shell").doubleClickCurrentCell
+            'add approver
+            session.FindById("wnd[0]/usr/ctxtAPPR").Text = APPROVER
+            'add reviewer
+            session.FindById("wnd[0]/usr/ctxtPR1").Text = REVIEWER
+            session.FindById("wnd[0]/usr/ctxtPR1").SetFocus
+            session.FindById("wnd[0]/usr/ctxtPR1").caretPosition = 6
+            'mouse click EXECUTE, just pressing enter also works
+            session.FindById("wnd[0]").sendVKey 0
+        End If
+    Next
+End Sub
+
