@@ -4,34 +4,28 @@ Public objGui  As GuiApplication
 Public objConn As GuiConnection
 Public session As GuiSession
 Sub createPR()
+    'SAP application start
     Dim WshShell As Object
-    
-    'Start core SAP application
     Shell "C:\Program Files (x86)\SAP\FrontEnd\SAPgui\saplogon.exe", 4
     Set WshShell = CreateObject("WScript.Shell")
-    
-    'Wait till SAP loads
     Do Until WshShell.AppActivate("SAP Logon ")
         application.Wait Now + TimeValue("0:00:01")
     Loop
-    
-    Dim SapGuiAuto As Object
-    Dim SAPapp As Object
-    Dim SAPconn As Object
-    Dim SAPsess As Object
-    
+    Set WshShell = Nothing
+    'I need to manually start SAPGUI. I can't get it to start on it's own.
     Set SapGuiAuto = GetObject("SAPGUI")
-    Set SAPapp = SapGuiAuto.GetScriptingEngine
-    Set SAPconn = SAPapp.Children(0) 'I get an error here
-    Set SAPsess = SAPconn.Children(0)
-    '
+    Set objGui = SapGuiAuto.GetScriptingEngine
+    Set objConn = objGui.Children(0)
+    Set session = objConn.Children(0)
+    'This starts the tranaction
     session.StartTransaction "ME51N"
-    '
+
     Dim objExcel
     Dim objSheet, intRow, i, n
     Dim VENDORNAME, VENDOR, VENDORCONTRACT, SHORTTEXT, WORKORDER, VALUATION, FOLDER, FILENAME, PRSBAR, PREQ, APPROVER, REVIEWER
     Set objExcel = GetObject(, "Excel.Application")
     Set objSheet = objExcel.ActiveWorkbook.ActiveSheet
+    Set i = Nothing
     
     For i = 4 To objSheet.UsedRange.Rows.Count
          If IsEmpty(Cells(i, "I")) Then
@@ -48,8 +42,7 @@ Sub createPR()
              Cells(i + 12, 9) = FOLDER
              Cells(i + 13, 9) = FILENAME
              Cells(i + 14, 9) = PREQ
-        
-         
+                 
             'Enter purchace organization
             session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0013/subSUB2:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:3212/cntlGRIDCONTROL/shellcont/shell").modifyCell 0, "EKORG", "1200"
             'Enter short text
@@ -61,7 +54,7 @@ Sub createPR()
             session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0013/subSUB2:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:3212/cntlGRIDCONTROL/shellcont/shell").currentCellColumn = "MENGE"
             'Press enter to confirm entries so far
             session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0013/subSUB2:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:3212/cntlGRIDCONTROL/shellcont/shell").pressEnter
-            'On first run of ME51N, a pop-up opens confirming who the requisitioner is, either press enter or click OK to confirm
+            'On first run of ME51N, a pop-up opens confirming who the requisitioner is, either press enter or click OK to confirm. This messes up on the second round. Need to flag this on the first round so it doesn't keep trying.
             session.FindById("wnd[1]/usr/btnBUTTON_1").press
             'Enter GL account
             session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0020/subSUB3:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:1301/subSUB2:SAPLMEGUI:3303/tabsREQ_ITEM_DETAIL/tabpTABREQDT6/ssubTABSTRIPCONTROL1SUB:SAPLMEVIEWS:1101/subSUB2:SAPLMEACCTVI:0100/subSUB1:SAPLMEACCTVI:1100/ctxtMEACCT1100-SAKTO").Text = "690051"
@@ -70,14 +63,13 @@ Sub createPR()
             'Press Enter
             session.FindById("wnd[0]").sendVKey 0
             'Enter Valuation
-             session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0010/subSUB3:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:1301/subSUB2:SAPLMEGUI:3303/tabsREQ_ITEM_DETAIL/tabpTABREQDT5/ssubTABSTRIPCONTROL1SUB:SAPLMEGUI:3320/txtMEREQ3320-PREIS").Text = VALUATION
+            session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0010/subSUB3:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:1301/subSUB2:SAPLMEGUI:3303/tabsREQ_ITEM_DETAIL/tabpTABREQDT5/ssubTABSTRIPCONTROL1SUB:SAPLMEGUI:3320/txtMEREQ3320-PREIS").Text = VALUATION
             'Press Enter
             session.FindById("wnd[0]").sendVKey 0
-            'Application.Wait (Now + TimeValue("0:00:03"))
-            
             'THIS IF STATMENT IS NOT WORKING. IF THE AGREEMENT COLUMN (D) IS BLANK I NEED THE LOCAL PO PROCESS. IF THERE IS AN AGREEMENT NUMBER I NEED TEXT ENTERED "Please apply to OA: (next line) VENDORNAME (next line) VENDOR (Next Line) VENDORCONTRACT
-            If IsEmpty(Cells(i, 4)) Then 'Create Local PO
+            If Cells(i, 2) = "" Then 'Create Local PO
                 'Click Local PO ticky box
+                session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0010/subSUB3:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:1301/subSUB2:SAPLMEGUI:3303/tabsREQ_ITEM_DETAIL/tabpTABREQDT15").Select
                 session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0010/subSUB3:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:1301/subSUB2:SAPLMEGUI:3303/tabsREQ_ITEM_DETAIL/tabpTABREQDT15/ssubTABSTRIPCONTROL1SUB:SAPLMEGUI:1318/ssubCUSTOMER_DATA_ITEM:SAPLXM02:0111/chkCI_EBANDB-ZZLOCLPO").Selected = True
                 'Enter Region Code
                 session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0010/subSUB3:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:1301/subSUB2:SAPLMEGUI:3303/tabsREQ_ITEM_DETAIL/tabpTABREQDT15/ssubTABSTRIPCONTROL1SUB:SAPLMEGUI:1318/ssubCUSTOMER_DATA_ITEM:SAPLXM02:0111/ctxtCI_EBANDB-ZZREGIO").Text = "10"
@@ -85,10 +77,10 @@ Sub createPR()
                 session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0010/subSUB3:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:1301/subSUB2:SAPLMEGUI:3303/tabsREQ_ITEM_DETAIL/tabpTABREQDT15/ssubTABSTRIPCONTROL1SUB:SAPLMEGUI:1318/ssubCUSTOMER_DATA_ITEM:SAPLXM02:0111/ctxtCI_EBANDB-ZZ_LIFNR").Text = VENDOR
                 'Press Enter
                 session.FindById("wnd[0]").sendVKey 0
-            Else 'enter text to get buyer to use OA contract
-                session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0020/subSUB3:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:1301/subSUB2:SAPLMEGUI:3303/tabsREQ_ITEM_DETAIL/tabpTABREQDT13").Select
-                session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0010/subSUB3:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:1301/subSUB2:SAPLMEGUI:3303/tabsREQ_ITEM_DETAIL/tabpTABREQDT13/ssubTABSTRIPCONTROL1SUB:SAPLMEGUI:1329/subTEXTS:SAPLMMTE:0200/subEDITOR:SAPLMMTE:0201/cntlTEXT_EDITOR_0201/shellcont/shell").Text = "Please apply to OA:" + vbCr + VENDORNAME + vbCr + VENDOR + vbCr + VENDORCONTRACT
-                session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0010/subSUB3:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:1301/subSUB2:SAPLMEGUI:3303/tabsREQ_ITEM_DETAIL/tabpTABREQDT13/ssubTABSTRIPCONTROL1SUB:SAPLMEGUI:1329/subTEXTS:SAPLMMTE:0200/subEDITOR:SAPLMMTE:0201/cntlTEXT_EDITOR_0201/shellcont/shell").SetSelectionIndexes 14, 14
+            Else 'enter text to get buyer to use OA contract. I can't get this to work. It won't get any text into SAP text box.
+                session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0010/subSUB3:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:1301/subSUB2:SAPLMEGUI:3303/tabsREQ_ITEM_DETAIL/tabpTABREQDT13/ssubTABSTRIPCONTROL1SUB:SAPLMEGUI:1329/subTEXTS:SAPLMMTE:0200/cntlTEXT_TYPES_0200/shell").selectedNode = "B02"
+                session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0010/subSUB3:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:1301/subSUB2:SAPLMEGUI:3303/tabsREQ_ITEM_DETAIL/tabpTABREQDT13/ssubTABSTRIPCONTROL1SUB:SAPLMEGUI:1329/subTEXTS:SAPLMMTE:0200/subEDITOR:SAPLMMTE:0201/cntlTEXT_EDITOR_0201/shellcont/shell").Text = "test" + vbCr + "this" + vbCr + ""
+                session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0010/subSUB3:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:1301/subSUB2:SAPLMEGUI:3303/tabsREQ_ITEM_DETAIL/tabpTABREQDT13/ssubTABSTRIPCONTROL1SUB:SAPLMEGUI:1329/subTEXTS:SAPLMMTE:0200/subEDITOR:SAPLMMTE:0201/cntlTEXT_EDITOR_0201/shellcont/shell").SetSelectionIndexes 9, 9
             End If
             'Click Toolbox dropdown to create attachment
             session.FindById("wnd[0]/titl/shellcont/shell").pressContextButton "%GOS_TOOLBOX"
@@ -103,13 +95,14 @@ Sub createPR()
             session.FindById("wnd[1]/tbar[0]/btn[0]").press
             'Click Save to complete PReq creation.
             session.FindById("wnd[0]/tbar[0]/btn[11]").press
+            'application.Wait (Now + TimeValue("0:00:03"))
             
-            'For getting the value back to excel, run the below command and assign the value got from the above creation process.
+            'Get the PR back to excel, it copies the whole line not just the PR so this strips just the nubmers.
             PRSBAR = session.FindById("wnd[0]/sbar").Text
             Dim StringLength As Integer
             StringLength = Len(PRSBAR)
             For n = 1 To StringLength
-            If IsNumeric(Mid(PRSBAR, n, 1)) Then PREQ = PREQ & Mid(PRSBAR, n, 1)
+                If IsNumeric(Mid(PRSBAR, n, 1)) Then PREQ = PREQ & Mid(PRSBAR, n, 1)
             Next n
             Cells(i, 9) = PREQ
         End If
@@ -134,7 +127,6 @@ Sub createPR()
             'add reviewer
             session.FindById("wnd[0]/usr/ctxtPR1").Text = REVIEWER
             session.FindById("wnd[0]/usr/ctxtPR1").SetFocus
-            session.FindById("wnd[0]/usr/ctxtPR1").caretPosition = 6
             'mouse click EXECUTE, just pressing enter also works
             session.FindById("wnd[0]").sendVKey 0
         End If
