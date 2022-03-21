@@ -21,11 +21,12 @@ Sub createPR()
     session.StartTransaction "ME51N"
 
     Dim objExcel
-    Dim objSheet, intRow, i, n
+    Dim objSheet, intRow
+    Dim i, n, c As Integer
     Dim VENDORNAME, VENDOR, VENDORCONTRACT, SHORTTEXT, WORKORDER, VALUATION, FOLDER, FILENAME, PRSBAR, PREQ, APPROVER, REVIEWER
     Set objExcel = GetObject(, "Excel.Application")
     Set objSheet = objExcel.ActiveWorkbook.ActiveSheet
-    Set i = Nothing
+    c = 1
     
     For i = 4 To objSheet.UsedRange.Rows.Count
          If IsEmpty(Cells(i, "I")) Then
@@ -37,12 +38,7 @@ Sub createPR()
              VALUATION = Trim(CStr(objSheet.Cells(i, 8).Value))
              FOLDER = Trim(CStr(objSheet.Cells(i, 14).Value))
              FILENAME = Trim(CStr(objSheet.Cells(i, 16).Value))
-             Cells(i + 10, 9) = "Please apply to OA:" + vbCr + VENDORNAME + vbCr + VENDORCONTRACT
-             Cells(i + 11, 9) = VENDOR
-             Cells(i + 12, 9) = FOLDER
-             Cells(i + 13, 9) = FILENAME
-             Cells(i + 14, 9) = PREQ
-                 
+            session.FindById("wnd[0]").Maximize
             'Enter purchace organization
             session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0013/subSUB2:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:3212/cntlGRIDCONTROL/shellcont/shell").modifyCell 0, "EKORG", "1200"
             'Enter short text
@@ -55,7 +51,8 @@ Sub createPR()
             'Press enter to confirm entries so far
             session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0013/subSUB2:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:3212/cntlGRIDCONTROL/shellcont/shell").pressEnter
             'On first run of ME51N, a pop-up opens confirming who the requisitioner is, either press enter or click OK to confirm. This messes up on the second round. Need to flag this on the first round so it doesn't keep trying.
-            session.FindById("wnd[1]/usr/btnBUTTON_1").press
+            If c = 1 Then session.FindById("wnd[1]/usr/btnBUTTON_1").press
+            c = c + 1
             'Enter GL account
             session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0020/subSUB3:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:1301/subSUB2:SAPLMEGUI:3303/tabsREQ_ITEM_DETAIL/tabpTABREQDT6/ssubTABSTRIPCONTROL1SUB:SAPLMEVIEWS:1101/subSUB2:SAPLMEACCTVI:0100/subSUB1:SAPLMEACCTVI:1100/ctxtMEACCT1100-SAKTO").Text = "690051"
             'Enter Work Order
@@ -77,10 +74,12 @@ Sub createPR()
                 session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0010/subSUB3:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:1301/subSUB2:SAPLMEGUI:3303/tabsREQ_ITEM_DETAIL/tabpTABREQDT15/ssubTABSTRIPCONTROL1SUB:SAPLMEGUI:1318/ssubCUSTOMER_DATA_ITEM:SAPLXM02:0111/ctxtCI_EBANDB-ZZ_LIFNR").Text = VENDOR
                 'Press Enter
                 session.FindById("wnd[0]").sendVKey 0
-            Else 'enter text to get buyer to use OA contract. I can't get this to work. It won't get any text into SAP text box.
-                session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0010/subSUB3:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:1301/subSUB2:SAPLMEGUI:3303/tabsREQ_ITEM_DETAIL/tabpTABREQDT13/ssubTABSTRIPCONTROL1SUB:SAPLMEGUI:1329/subTEXTS:SAPLMMTE:0200/cntlTEXT_TYPES_0200/shell").selectedNode = "B02"
-                session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0010/subSUB3:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:1301/subSUB2:SAPLMEGUI:3303/tabsREQ_ITEM_DETAIL/tabpTABREQDT13/ssubTABSTRIPCONTROL1SUB:SAPLMEGUI:1329/subTEXTS:SAPLMMTE:0200/subEDITOR:SAPLMMTE:0201/cntlTEXT_EDITOR_0201/shellcont/shell").Text = "test" + vbCr + "this" + vbCr + ""
-                session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0010/subSUB3:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:1301/subSUB2:SAPLMEGUI:3303/tabsREQ_ITEM_DETAIL/tabpTABREQDT13/ssubTABSTRIPCONTROL1SUB:SAPLMEGUI:1329/subTEXTS:SAPLMMTE:0200/subEDITOR:SAPLMMTE:0201/cntlTEXT_EDITOR_0201/shellcont/shell").SetSelectionIndexes 9, 9
+            Else 'enter text to get buyer to use OA contract. I can't get this to work. It won't get any text into SAP.
+session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0010/subSUB3:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:1301/subSUB2:SAPLMEGUI:3303/tabsREQ_ITEM_DETAIL/tabpTABREQDT13/ssubTABSTRIPCONTROL1SUB:SAPLMEGUI:1329/subTEXTS:SAPLMMTE:0200/subEDITOR:SAPLMMTE:0201/cntlTEXT_EDITOR_0201/shellcont/shell").Text = "test" + vbCr + ""
+session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0010/subSUB3:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:1301/subSUB2:SAPLMEGUI:3303/tabsREQ_ITEM_DETAIL/tabpTABREQDT13/ssubTABSTRIPCONTROL1SUB:SAPLMEGUI:1329/subTEXTS:SAPLMMTE:0200/subEDITOR:SAPLMMTE:0201/cntlTEXT_EDITOR_0201/shellcont/shell").SetSelectionIndexes 4, 4
+session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0010/subSUB3:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:1301/subSUB2:SAPLMEGUI:3303/tabsREQ_ITEM_DETAIL/tabpTABREQDT13/ssubTABSTRIPCONTROL1SUB:SAPLMEGUI:1329/subTEXTS:SAPLMMTE:0200/cntlTEXT_TYPES_0200/shell").selectedNode = "B02"
+session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0010/subSUB3:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:1301/subSUB2:SAPLMEGUI:3303/tabsREQ_ITEM_DETAIL/tabpTABREQDT13/ssubTABSTRIPCONTROL1SUB:SAPLMEGUI:1329/subTEXTS:SAPLMMTE:0200/subEDITOR:SAPLMMTE:0201/cntlTEXT_EDITOR_0201/shellcont/shell").Text = "this" + vbCr + "" + vbCr + "out" + vbCr + ""
+session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0010/subSUB3:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:1301/subSUB2:SAPLMEGUI:3303/tabsREQ_ITEM_DETAIL/tabpTABREQDT13/ssubTABSTRIPCONTROL1SUB:SAPLMEGUI:1329/subTEXTS:SAPLMMTE:0200/subEDITOR:SAPLMMTE:0201/cntlTEXT_EDITOR_0201/shellcont/shell").SetSelectionIndexes 9, 9
             End If
             'Click Toolbox dropdown to create attachment
             session.FindById("wnd[0]/titl/shellcont/shell").pressContextButton "%GOS_TOOLBOX"
