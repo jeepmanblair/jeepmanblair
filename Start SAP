@@ -1,7 +1,6 @@
 --------------------------------------------------------------------
 'Direct from SAP scripts:
 
-'From SAP scripts:
 If Not IsObject(application) Then
    Set SapGuiAuto  = GetObject("SAPGUI")
    Set application = SapGuiAuto.GetScriptingEngine
@@ -20,9 +19,9 @@ End If
 -------------------------------------------------
 'SAP scripts with changed variable names
 
-Dim SAPapp
-Dim SAPconn
-Dim SAPsess
+Dim SAPapp As Object
+Dim SAPconn As Object
+Dim SAPsess As Object
 If Not IsObject(SAPapp) Then
     Set SapGuiAuto = GetObject("SAPGUI")
     Set SAPapp = SapGuiAuto.GetScriptingEngine
@@ -46,21 +45,40 @@ Public objConn As GuiConnection
 Public session As GuiSession
 Sub createPR()
     Dim WshShell As Object
-    Shell "C:\Program Files (x86)\SAP\FrontEnd\SAPgui\saplogon.exe", 4 'Enter your path to saplogon
+    Shell "C:\Program Files (x86)\SAP\FrontEnd\SAPgui\saplogon.exe", 4
     Set WshShell = CreateObject("WScript.Shell")
-    
     Do Until WshShell.AppActivate("SAP Logon ")
         Application.Wait Now + TimeValue("0:00:01")
     Loop
-    
     Set WshShell = Nothing
-    
     Set SapGuiAuto = GetObject("SAPGUI")
     Set objGui = SapGuiAuto.GetScriptingEngine
     Set objConn = objGui.Children(0) 'GET ERROR HERE
     Set session = objConn.Children(0)
+    
+    session.StartTransaction "ME51N"
 ----------------------------------------------------------------
+Sub createPR()
+   Dim sapgui
+   Dim applic
+   Dim connection
+   Dim session
+   Dim wshshell
+   Shell "C:\Program Files (x86)\SAP\FrontEnd\SapGui\saplogon.exe", vbNormalFocus
+   Set wshshell = CreateObject("WScript.shell")
+   Do Until wshshell.AppActivate("SAP Logon")
+       Application.Wait Now + TimeValue("0:00:02")
+   Loop
+   Set wshshell = Nothing
+   Set sapgui = GetObject("SAPGUI")
+   Set applic = sapgui.Getscriptingengine
+   Set connection = applic.OpenConnection("ME51N", True) 'GET ERROR HERE
+   Set session = connection.Children(0)
+       'your script here
+End sub
+----------------------------------------------
 'https://stackoverflow.com/questions/45187903/how-to-run-sap-gui-script-from-excel-macro
+'Does NOT work
 
 Sub createPR()
     Dim SapGuiAuto As Object
@@ -73,28 +91,6 @@ Sub createPR()
     Set SAPsess = SAPCon.Children.ElementAt(0) ' <--- Assumes you are using the first session open. '
 'Your script here
 End Sub
-----------------------------------------------
-
-Sub createPR()
-
-Dim sapgui
-Dim applic
-Dim connection
-Dim session
-Dim wshshell
-Shell "C:\Program Files (x86)\SAP\FrontEnd\SapGui\saplogon.exe", vbNormalFocus
-Set wshshell = CreateObject("WScript.shell")
-Do Until wshshell.AppActivate("SAP Logon")
-    Application.Wait Now + TimeValue("0:00:02")
-Loop
-
-Set wshshell = Nothing
-Set sapgui = GetObject("SAPGUI")
-Set applic = sapgui.Getscriptingengine
-Set connection = applic.OpenConnection("ME51N", True)
-Set session = connection.Children(0)
-    'your script here
-End sub
 ----------------------------------------------
 URL that opens SAP:
 https://wd.sap.hydroone.com:8190/irj/servlet/prt/portal/prtroot/pcdshort!3a!2f9Yu5eDSjUrx1mwBO6Wh2GGI53fc!3d/tx.sap?NavPathUpdate=false&NavMode=0&windowId=WID1647530848480&sapDocumentRenderingMode=Edge&%24Roundtrip=true&%24DebugAction=null
