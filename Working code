@@ -5,39 +5,46 @@ Public objConn As GuiConnection
 Public session As GuiSession
 Sub createPR()
     'SAP application start
-    Dim WshShell As Object
-    Shell "C:\Program Files (x86)\SAP\FrontEnd\SAPgui\saplogon.exe", 4
-    Set WshShell = CreateObject("WScript.Shell")
-    Do Until WshShell.AppActivate("SAP Logon ")
-        application.Wait Now + TimeValue("0:00:01")
-    Loop
-    Set WshShell = Nothing
+    'Dim WshShell As Object
+    'Shell "C:\Program Files (x86)\SAP\FrontEnd\SAPgui\saplogon.exe", 4
+    'Set WshShell = CreateObject("WScript.Shell")
+    'Do Until WshShell.AppActivate("SAP Logon ")
+    '    application.Wait Now + TimeValue("0:00:01")
+    'Loop
+    'Set WshShell = Nothing
+    
     'I need to manually start SAPGUI. I can't get it to start on it's own.
+    
     Set SapGuiAuto = GetObject("SAPGUI")
     Set objGui = SapGuiAuto.GetScriptingEngine
     Set objConn = objGui.Children(0)
     Set session = objConn.Children(0)
+    
     'This starts the tranaction
     session.StartTransaction "ME51N"
 
     Dim objExcel
     Dim objSheet, intRow
-    Dim i, n, c As Integer
+    Dim i, n, c, COUNT As Integer
     Dim VENDORNAME, VENDOR, VENDORCONTRACT, SHORTTEXT, WORKORDER, VALUATION, FOLDER, FILENAME, PRSBAR, PREQ, APPROVER, REVIEWER
+    Dim ROWS
     Set objExcel = GetObject(, "Excel.Application")
     Set objSheet = objExcel.ActiveWorkbook.ActiveSheet
     c = 1
+    ROWS = objSheet.UsedRange.ROWS.COUNT
+    Cells(1, 3) = ROWS
     
-    For i = 4 To objSheet.UsedRange.Rows.Count
+    For i = 3 To ROWS
          If IsEmpty(Cells(i, "I")) Then
-             VENDORNAME = Trim(CStr(objSheet.Cells(i, 3).Value))
-             VENDOR = Trim(CStr(objSheet.Cells(i, 4).Value))
-             VENDORCONTRACT = Trim(CStr(objSheet.Cells(i, 2).Value))
-             SHORTTEXT = Trim(CStr(objSheet.Cells(i, 5).Value))
-             WORKORDER = Trim(CStr(objSheet.Cells(i, 6).Value))
-             VALUATION = Trim(CStr(objSheet.Cells(i, 8).Value))
-             FOLDER = Trim(CStr(objSheet.Cells(i, 14).Value))
-             FILENAME = Trim(CStr(objSheet.Cells(i, 16).Value))
+            VENDORNAME = Trim(CStr(objSheet.Cells(i, 3).Value))
+            VENDOR = Trim(CStr(objSheet.Cells(i, 4).Value))
+            VENDORCONTRACT = Trim(CStr(objSheet.Cells(i, 2).Value))
+            SHORTTEXT = Trim(CStr(objSheet.Cells(i, 5).Value))
+            WORKORDER = Trim(CStr(objSheet.Cells(i, 6).Value))
+            VALUATION = Trim(CStr(objSheet.Cells(i, 8).Value))
+            FOLDER = Trim(CStr(objSheet.Cells(i, 14).Value))
+            FILENAME = Trim(CStr(objSheet.Cells(i, 16).Value))
+            'Maximize window
             session.FindById("wnd[0]").Maximize
             'Enter purchace organization
             session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0013/subSUB2:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:3212/cntlGRIDCONTROL/shellcont/shell").modifyCell 0, "EKORG", "1200"
@@ -47,11 +54,12 @@ Sub createPR()
             session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0013/subSUB2:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:3212/cntlGRIDCONTROL/shellcont/shell").modifyCell 0, "MEINS", "lot"
             'Enter Quantity
             session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0013/subSUB2:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:3212/cntlGRIDCONTROL/shellcont/shell").modifyCell 0, "MENGE", "1"
-            session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0013/subSUB2:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:3212/cntlGRIDCONTROL/shellcont/shell").currentCellColumn = "MENGE"
+            'session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0013/subSUB2:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:3212/cntlGRIDCONTROL/shellcont/shell").currentCellColumn = "MENGE"
             'Press enter to confirm entries so far
             session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0013/subSUB2:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:3212/cntlGRIDCONTROL/shellcont/shell").pressEnter
             'On first run of ME51N, a pop-up opens confirming who the requisitioner is, either press enter or click OK to confirm. This messes up on the second round. Need to flag this on the first round so it doesn't keep trying.
             If c = 1 Then session.FindById("wnd[1]/usr/btnBUTTON_1").press
+            'this should only count when the script is actually processing a row
             c = c + 1
             'Enter GL account
             session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0020/subSUB3:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:1301/subSUB2:SAPLMEGUI:3303/tabsREQ_ITEM_DETAIL/tabpTABREQDT6/ssubTABSTRIPCONTROL1SUB:SAPLMEVIEWS:1101/subSUB2:SAPLMEACCTVI:0100/subSUB1:SAPLMEACCTVI:1100/ctxtMEACCT1100-SAKTO").Text = "690051"
@@ -75,11 +83,8 @@ Sub createPR()
                 'Press Enter
                 session.FindById("wnd[0]").sendVKey 0
             Else 'enter text to get buyer to use OA contract. I can't get this to work. It won't get any text into SAP.
-session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0010/subSUB3:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:1301/subSUB2:SAPLMEGUI:3303/tabsREQ_ITEM_DETAIL/tabpTABREQDT13/ssubTABSTRIPCONTROL1SUB:SAPLMEGUI:1329/subTEXTS:SAPLMMTE:0200/subEDITOR:SAPLMMTE:0201/cntlTEXT_EDITOR_0201/shellcont/shell").Text = "test" + vbCr + ""
-session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0010/subSUB3:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:1301/subSUB2:SAPLMEGUI:3303/tabsREQ_ITEM_DETAIL/tabpTABREQDT13/ssubTABSTRIPCONTROL1SUB:SAPLMEGUI:1329/subTEXTS:SAPLMMTE:0200/subEDITOR:SAPLMMTE:0201/cntlTEXT_EDITOR_0201/shellcont/shell").SetSelectionIndexes 4, 4
-session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0010/subSUB3:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:1301/subSUB2:SAPLMEGUI:3303/tabsREQ_ITEM_DETAIL/tabpTABREQDT13/ssubTABSTRIPCONTROL1SUB:SAPLMEGUI:1329/subTEXTS:SAPLMMTE:0200/cntlTEXT_TYPES_0200/shell").selectedNode = "B02"
-session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0010/subSUB3:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:1301/subSUB2:SAPLMEGUI:3303/tabsREQ_ITEM_DETAIL/tabpTABREQDT13/ssubTABSTRIPCONTROL1SUB:SAPLMEGUI:1329/subTEXTS:SAPLMMTE:0200/subEDITOR:SAPLMMTE:0201/cntlTEXT_EDITOR_0201/shellcont/shell").Text = "this" + vbCr + "" + vbCr + "out" + vbCr + ""
-session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0010/subSUB3:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:1301/subSUB2:SAPLMEGUI:3303/tabsREQ_ITEM_DETAIL/tabpTABREQDT13/ssubTABSTRIPCONTROL1SUB:SAPLMEGUI:1329/subTEXTS:SAPLMMTE:0200/subEDITOR:SAPLMMTE:0201/cntlTEXT_EDITOR_0201/shellcont/shell").SetSelectionIndexes 9, 9
+                session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0010/subSUB3:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:1301/subSUB2:SAPLMEGUI:3303/tabsREQ_ITEM_DETAIL/tabpTABREQDT13").Select
+                session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0010/subSUB3:SAPLMEVIEWS:1100/subSUB2:SAPLMEVIEWS:1200/subSUB1:SAPLMEGUI:1301/subSUB2:SAPLMEGUI:3303/tabsREQ_ITEM_DETAIL/tabpTABREQDT13/ssubTABSTRIPCONTROL1SUB:SAPLMEGUI:1329/subTEXTS:SAPLMMTE:0200/subEDITOR:SAPLMMTE:0201/cntlTEXT_EDITOR_0201/shellcont/shell").Text = "Please apply to OA: " + VENDORCONTRACT + vbCr + VENDORNAME + ": " + VENDOR
             End If
             'Click Toolbox dropdown to create attachment
             session.FindById("wnd[0]/titl/shellcont/shell").pressContextButton "%GOS_TOOLBOX"
@@ -94,9 +99,8 @@ session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0010/subSUB3:SAPLMEVIEWS:1100/sub
             session.FindById("wnd[1]/tbar[0]/btn[0]").press
             'Click Save to complete PReq creation.
             session.FindById("wnd[0]/tbar[0]/btn[11]").press
-            'application.Wait (Now + TimeValue("0:00:03"))
-            
             'Get the PR back to excel, it copies the whole line not just the PR so this strips just the nubmers.
+            'Copy status bar text
             PRSBAR = session.FindById("wnd[0]/sbar").Text
             Dim StringLength As Integer
             StringLength = Len(PRSBAR)
@@ -104,19 +108,25 @@ session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0010/subSUB3:SAPLMEVIEWS:1100/sub
                 If IsNumeric(Mid(PRSBAR, n, 1)) Then PREQ = PREQ & Mid(PRSBAR, n, 1)
             Next n
             Cells(i, 9) = PREQ
+            PREQ = ""
+            Cells(i, "Q") = c
         End If
     Next
+    Cells(i, "R") = c
+    i = ""
     session.EndTransaction
-    For i = 4 To objSheet.UsedRange.Rows.Count
+    'open business workplace
+    session.FindById("wnd[0]/tbar[1]/btn[36]").press
+    'expand inbox
+    session.FindById("wnd[0]/usr/cntlSINWP_CONTAINER/shellcont/shell/shellcont[0]/shell").expandNode "          2"
+    'select workflow
+    session.FindById("wnd[0]/usr/cntlSINWP_CONTAINER/shellcont/shell/shellcont[0]/shell").selectedNode = "          5"
+    'the first item in the workflow will be the last PR that was made so it needs to count from the last to the first processed row.
+    COUNT = ROWS - c
+    For i = ROWS To COUNT Step -1
         If IsEmpty(Cells(i, "J")) Then
             REVIEWER = Trim(CStr(objSheet.Cells(1, 15).Value))
             APPROVER = Trim(CStr(objSheet.Cells(i, 15).Value))
-            'open business workplace
-            session.FindById("wnd[0]/tbar[1]/btn[36]").press
-            'expand inbox
-            session.FindById("wnd[0]/usr/cntlSINWP_CONTAINER/shellcont/shell/shellcont[0]/shell").expandNode "          2"
-            'select workflow
-            session.FindById("wnd[0]/usr/cntlSINWP_CONTAINER/shellcont/shell/shellcont[0]/shell").selectedNode = "          5"
             'select top item in workflow - approval
             session.FindById("wnd[0]/usr/cntlSINWP_CONTAINER/shellcont/shell/shellcont[0]/shell").topNode = "          1"
             session.FindById("wnd[0]/usr/cntlSINWP_CONTAINER/shellcont/shell/shellcont[1]/shell/shellcont[0]/shell").currentCellColumn = "WI_TEXT"
@@ -125,9 +135,9 @@ session.FindById("wnd[0]/usr/subSUB0:SAPLMEGUI:0010/subSUB3:SAPLMEVIEWS:1100/sub
             session.FindById("wnd[0]/usr/ctxtAPPR").Text = APPROVER
             'add reviewer
             session.FindById("wnd[0]/usr/ctxtPR1").Text = REVIEWER
-            session.FindById("wnd[0]/usr/ctxtPR1").SetFocus
             'mouse click EXECUTE, just pressing enter also works
             session.FindById("wnd[0]").sendVKey 0
         End If
     Next
 End Sub
+
