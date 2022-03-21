@@ -6,20 +6,24 @@ Public session As GuiSession
 Sub createPR()
     Dim WshShell As Object
     
-    'This attempts to start SAP GUI
-    'Shell "C:\Program Files (x86)\SAP\FrontEnd\SAPgui\saplogon.exe", 4 'Enter your path to saplogon
-    'Set WshShell = CreateObject("WScript.Shell")
-    '
-    'Do Until WshShell.AppActivate("SAP Logon ")
-    '    Application.Wait Now + TimeValue("0:00:01")
-    'Loop
+    'Start core SAP application
+    Shell "C:\Program Files (x86)\SAP\FrontEnd\SAPgui\saplogon.exe", 4
+    Set WshShell = CreateObject("WScript.Shell")
     
-    'This requires SAP GUI to be running
-    Set WshShell = Nothing
+    'Wait till SAP loads
+    Do Until WshShell.AppActivate("SAP Logon ")
+        application.Wait Now + TimeValue("0:00:01")
+    Loop
+    
+    Dim SapGuiAuto As Object
+    Dim SAPapp As Object
+    Dim SAPconn As Object
+    Dim SAPsess As Object
+    
     Set SapGuiAuto = GetObject("SAPGUI")
-    Set objGui = SapGuiAuto.GetScriptingEngine
-    Set objConn = objGui.Children(0)
-    Set session = objConn.Children(0)
+    Set SAPapp = SapGuiAuto.GetScriptingEngine
+    Set SAPconn = SAPapp.Children(0) 'I get an error here
+    Set SAPsess = SAPconn.Children(0)
     '
     session.StartTransaction "ME51N"
     '
@@ -124,7 +128,7 @@ Sub createPR()
             'select top item in workflow - approval
             session.FindById("wnd[0]/usr/cntlSINWP_CONTAINER/shellcont/shell/shellcont[0]/shell").topNode = "          1"
             session.FindById("wnd[0]/usr/cntlSINWP_CONTAINER/shellcont/shell/shellcont[1]/shell/shellcont[0]/shell").currentCellColumn = "WI_TEXT"
-            session.FindById("wnd[0]/usr/cntlSINWP_CONTAINER/shellcont/shell/shellcont[1]/shell/shellcont[0]/shell").doubleClickCurrentCell
+            session.FindById("wnd[0]/usr/cntlSINWP_CONTAINER/shellcont/shell/shellcont[1]/shell/shellcont[0]/shell").DoubleClickCurrentCell
             'add approver
             session.FindById("wnd[0]/usr/ctxtAPPR").Text = APPROVER
             'add reviewer
@@ -136,4 +140,3 @@ Sub createPR()
         End If
     Next
 End Sub
-
