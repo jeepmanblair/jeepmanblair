@@ -12,3 +12,9 @@ ErrText = session.FindById("wnd[0]/sbar/").text
 -------------------------------
 add delay
             application.Wait (Now + TimeValue("0:00:03"))
+-----------------------------------
+find last used row
+
+No_Of_Rows = Range("A1").End(xlDown)
+or
+No_Of_Rows = Cells(Rows.Count, 1) 'Column 1
