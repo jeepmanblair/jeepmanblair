@@ -15,6 +15,6 @@ add delay
 -----------------------------------
 find last used row
 
-No_Of_Rows = Range("A1").End(xlDown)
+Rows = objSheet.Range("A3").End(xlDown).Row
 or
 No_Of_Rows = Cells(Rows.Count, 1) 'Column 1
