@@ -18,3 +18,18 @@ find last used row
 Rows = objSheet.Range("A3").End(xlDown).Row
 or
 No_Of_Rows = Cells(Rows.Count, 1) 'Column 1
+
+--------------------------------
+detect which screen is displayed
+
+https://answers.sap.com/questions/12879395/how-to-handle-a-variable-sap-id-name-in-vba-script.html
+
+
+
+If Not ObjSess.findById("wnd[0]/usr/subSUB_ALL:SAPLCOIH:3001/ssubSUB_LEVEL:SAPLCOIH:1100") Is Nothing Then
+  ' screen 1100 is displayed
+Else If Not ObjSess.findById("wnd[0]/usr/subSUB_ALL:SAPLCOIH:3001/ssubSUB_LEVEL:SAPLCOIH:1101") Is Nothing Then
+  ' screen 1101 is displayed
+Else If Not ObjSess.findById("wnd[0]/usr/subSUB_ALL:SAPLCOIH:3001/ssubSUB_LEVEL:SAPLCOIH:1107") Is Nothing Then
+  ' screen 1107 is displayed
+End If
