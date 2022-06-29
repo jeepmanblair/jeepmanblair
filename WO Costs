@@ -50,7 +50,7 @@ Sub costWO()
         session.FindById("wnd[1]/tbar[0]/btn[0]").Press
     End If
     
-    
+    'If 
     'Contracts/Services
     session.FindById("wnd[0]/usr/subSUB_ALL:SAPLCOIH:3001/ssubSUB_LEVEL:SAPLCOIH:1101/tabsTS_1100/tabpKOAU/ssubSUB_AUFTRAG:SAPLICO1:1100/tabsTABSTRIP/tabpTS10/ssubVALUES:SAPLICO1:1110/tblSAPLICO1TCTRL_1110/txtPMCOEA-SKOSTENKGR[1,0]").TEXT = CONTRACTOR
     'Material
