@@ -1,0 +1,74 @@
+Option Explicit
+Public SapGuiAuto, WScript, msgcol
+Public objGui  As GuiApplication
+Public objConn As GuiConnection
+Public session As GuiSession
+Sub costWO()
+    
+    Set SapGuiAuto = GetObject("SAPGUI")
+    Set objGui = SapGuiAuto.GetScriptingEngine
+    Set objConn = objGui.Children(0)
+    Set session = objConn.Children(0)
+    
+    Dim objExcel
+    Dim objSheet, intRow
+    Dim LABOUR, MATERIAL, CONTRACTOR, SUNDRY, TWE
+    Set objExcel = GetObject(, "Excel.Application")
+    Set objSheet = objExcel.ActiveWorkbook.ActiveSheet
+     
+    LABOUR = Round(Trim(CStr(objSheet.Cells(7, 24).Value)), 2)
+    MATERIAL = Round(Trim(CStr(objSheet.Cells(8, 24).Value)), 2)
+    CONTRACTOR = Round(Trim(CStr(objSheet.Cells(9, 24).Value)), 2)
+    SUNDRY = Round(Trim(CStr(objSheet.Cells(10, 24).Value)), 2)
+    TWE = Round(Trim(CStr(objSheet.Cells(11, 24).Value)), 2)
+    
+    'Start tranaction IW32 to enter estimated costs
+    session.StartTransaction "IW32"
+    'press enter
+    session.FindById("wnd[0]").sendVKey 0
+    'costs tab
+    session.FindById("wnd[0]/usr/subSUB_ALL:SAPLCOIH:3001/ssubSUB_LEVEL:SAPLCOIH:1100/tabsTS_1100/tabpKOAU").Select
+    'costs sub-tab
+    session.FindById("wnd[0]/usr/subSUB_ALL:SAPLCOIH:3001/ssubSUB_LEVEL:SAPLCOIH:1101/tabsTS_1100/tabpKOAU/ssubSUB_AUFTRAG:SAPLICO1:1100/tabsTABSTRIP/tabpTS10").Select
+    
+    'only add sundry category if there are no flights
+    If Cells(10, 23) = 0 Then
+        'click category button
+        session.FindById("wnd[0]/usr/subSUB_ALL:SAPLCOIH:3001/ssubSUB_LEVEL:SAPLCOIH:1101/tabsTS_1100/tabpKOAU/ssubSUB_AUFTRAG:SAPLICO1:1100/btnPUSH3").Press
+        'click search
+        session.FindById("wnd[1]/usr/ssubRAHMEN:SAPLCNFA:0111/subALLE_FELDER:SAPLCNFA:0130/btnSUCHEN").Press
+        'type sundry
+        session.FindById("wnd[2]/usr/sub:SAPLSPO4:0300/txtSVALD-VALUE[0,21]").TEXT = "sundry"
+        'session.findById("wnd[2]/usr/sub:SAPLSPO4:0300/txtSVALD-VALUE[0,21]").caretPosition = 6
+        'press enter
+        session.FindById("wnd[2]").sendVKey 0
+        'click top row
+        'session.findById("wnd[1]/usr/ssubRAHMEN:SAPLCNFA:0111/subALLE_FELDER:SAPLCNFA:0130/tblSAPLCNFATC_ALLE_FELDER/txtALLE_FELDER-SCRTEXT[0,0]").caretPosition = 3
+        'click left arrow to add sundry from pool to selection criteria
+        session.FindById("wnd[1]/usr/ssubRAHMEN:SAPLCNFA:0111/subAUSWAHL:SAPLCNFA:0140/btnAUSWAEHLEN").Press
+        'click green check
+        session.FindById("wnd[1]/tbar[0]/btn[0]").Press
+    End If
+    
+    
+    'Contracts/Services
+    session.FindById("wnd[0]/usr/subSUB_ALL:SAPLCOIH:3001/ssubSUB_LEVEL:SAPLCOIH:1101/tabsTS_1100/tabpKOAU/ssubSUB_AUFTRAG:SAPLICO1:1100/tabsTABSTRIP/tabpTS10/ssubVALUES:SAPLICO1:1110/tblSAPLICO1TCTRL_1110/txtPMCOEA-SKOSTENKGR[1,0]").TEXT = CONTRACTOR
+    'Material
+    session.FindById("wnd[0]/usr/subSUB_ALL:SAPLCOIH:3001/ssubSUB_LEVEL:SAPLCOIH:1101/tabsTS_1100/tabpKOAU/ssubSUB_AUFTRAG:SAPLICO1:1100/tabsTABSTRIP/tabpTS10/ssubVALUES:SAPLICO1:1110/tblSAPLICO1TCTRL_1110/txtPMCOEA-SKOSTENKGR[1,1]").TEXT = MATERIAL
+    'Standard Fleet - Internal
+    session.FindById("wnd[0]/usr/subSUB_ALL:SAPLCOIH:3001/ssubSUB_LEVEL:SAPLCOIH:1101/tabsTS_1100/tabpKOAU/ssubSUB_AUFTRAG:SAPLICO1:1100/tabsTABSTRIP/tabpTS10/ssubVALUES:SAPLICO1:1110/tblSAPLICO1TCTRL_1110/txtPMCOEA-SKOSTENKGR[1,2]").TEXT = TWE
+    'Standard Labour
+    session.FindById("wnd[0]/usr/subSUB_ALL:SAPLCOIH:3001/ssubSUB_LEVEL:SAPLCOIH:1101/tabsTS_1100/tabpKOAU/ssubSUB_AUFTRAG:SAPLICO1:1100/tabsTABSTRIP/tabpTS10/ssubVALUES:SAPLICO1:1110/tblSAPLICO1TCTRL_1110/txtPMCOEA-SKOSTENKGR[1,3]").TEXT = LABOUR
+    'Sundry
+    session.FindById("wnd[0]/usr/subSUB_ALL:SAPLCOIH:3001/ssubSUB_LEVEL:SAPLCOIH:1101/tabsTS_1100/tabpKOAU/ssubSUB_AUFTRAG:SAPLICO1:1100/tabsTABSTRIP/tabpTS10/ssubVALUES:SAPLICO1:1110/tblSAPLICO1TCTRL_1110/txtPMCOEA-SKOSTENKGR[1,4]").TEXT = SUNDRY
+    'Press Enter
+    session.FindById("wnd[0]").sendVKey 0
+    
+    
+End Sub
+
+
+
+
+
+
